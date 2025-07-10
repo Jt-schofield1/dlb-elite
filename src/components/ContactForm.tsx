@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import emailjs from '@emailjs/browser';
 import toast from 'react-hot-toast';
 
 export default function ContactForm() {
@@ -15,26 +14,22 @@ export default function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      // EmailJS configuration - much simpler than SMTP!
-      const serviceID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'your_service_id';
-      const templateID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'your_template_id';
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || 'your_public_key';
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
 
-      const templateParams = {
-        from_name: form.name,
-        from_email: form.email,
-        phone: form.phone,
-        package_interest: form.packageKey,
-        message: form.message,
-        to_email: 'camwhite52@icloud.com'
-      };
-
-      await emailjs.send(serviceID, templateID, templateParams, publicKey);
-      
-      toast.success('Message sent successfully! Camden will get back to you soon.');
-      setForm({ name:'', email:'', phone:'', packageKey:'', message:'' });
+      if (response.ok) {
+        toast.success('Message sent successfully! Camden will get back to you soon.');
+        setForm({ name:'', email:'', phone:'', packageKey:'', message:'' });
+      } else {
+        throw new Error('Failed to send message');
+      }
     } catch (error) {
-      console.error('EmailJS error:', error);
+      console.error('Email error:', error);
       toast.error('Error sending message. Please try emailing camwhite52@icloud.com directly.');
     } finally {
       setIsSubmitting(false);
